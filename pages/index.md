@@ -10,7 +10,7 @@ select
   sum(pagos) as pagos,
   sum(importe_recaudado) as importe_recaudado
 from sdiego.cuotas
-where periodo <= current_date
+where last_day(periodo) <= last_day(current_date)
 group by periodo
 order by periodo
 ```
@@ -57,7 +57,7 @@ select
   strftime(periodo, '%Y-%m') as periodo,
   sum(saldo) as saldo
 from sdiego.cuotas
-where saldo > 0 and periodo <= current_date
+where saldo > 0 and last_day(periodo) <= last_day(current_date)
 group by periodo
 order by periodo
 ```
@@ -113,7 +113,7 @@ select
   sum(ejercido) as total_ejercido,
   sum(importe) as total_presupuesto
 from sdiego.presupuesto
-where periodo <= current_date
+where last_day(periodo) <= last_day(current_date)
 group by periodo, categoria
 order by periodo, "total_ejercido" desc
 ```
