@@ -1,5 +1,5 @@
 # This file was automatically generated
 name: sdiego
-type: motherduck
+type: duckdb
 options:
-  database: privada_san_diego
+  filename: warehouse.duckdb
