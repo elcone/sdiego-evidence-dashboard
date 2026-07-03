@@ -1,8 +1,8 @@
-select
+SELECT
   fecha,
   categoria,
   concepto,
   importe,
   estado
-from privada_san_diego.gastos
-where fecha is not null
+FROM bronze.gsheets_gastos
+WHERE fecha IS NOT NULL

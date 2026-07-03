@@ -1,6 +1,6 @@
-select
+SELECT
   periodo,
-  cast(casa as varchar) as casa,
+  cast(casa AS VARCHAR) AS casa,
   cuota,
   recargos,
   pagos,
@@ -8,5 +8,5 @@ select
   estado,
   fecha_pago,
   importe_recaudado
-from privada_san_diego.cuotas
-where periodo is not null
+FROM bronze.gsheets_cuotas
+WHERE periodo IS NOT NULL

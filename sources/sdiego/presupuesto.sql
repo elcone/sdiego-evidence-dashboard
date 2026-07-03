@@ -1,8 +1,8 @@
-select
+SELECT
   periodo,
   categoria,
   importe,
   ejercido,
   diferencia
-from privada_san_diego.presupuesto
-where periodo is not null
+FROM bronze.gsheets_presupuesto
+WHERE periodo IS NOT NULL
