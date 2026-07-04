@@ -1,132 +1,109 @@
 ---
-title: Privada San Diego
+title: Resultados de la Privada
 ---
 
-## Ingresos
-
-```sql ingresos
+```sql saldo_bajio
 select
-  strftime(last_day(periodo), '%Y-%m') as periodo,
-  sum(pagos) as pagos,
-  sum(importe_recaudado) as importe_recaudado
-from sdiego.cuotas
-where last_day(periodo) <= last_day(current_date)
-group by periodo
+  sum(saldo) as saldo
+from sdiego.saldo_bajio
+where periodo = (select max(periodo) from sdiego.saldo_bajio)
+```
+
+```sql saldos_por_casa
+select
+  casa::int::varchar as casa,
+  saldo
+from sdiego.saldos_por_casa
+where saldo <> 0
+order by casa
+```
+
+```sql ingresos_vs_gastos
+with movimiento as (
+  select
+    'Ingreso' as movimiento,
+    periodo,
+    mes,
+    sum(importe) as importe
+  from sdiego.ingresos
+  group by periodo, mes
+
+  union all
+
+  select
+    'Gasto' as movimiento,
+    periodo,
+    mes,
+    sum(importe) as importe
+  from sdiego.gastos
+  group by periodo, mes
+
+)
+
+select *
+from movimiento
 order by periodo
 ```
 
-<BarChart
-  data={ingresos}
-  x=periodo
-  y=importe_recaudado
-  yFmt=usd
-  sort=false
+```sql selector_mes_gastos
+select distinct mes
+from sdiego.gastos
+```
+
+```sql gastos
+select
+  tipo_gasto,
+  sum(importe) as importe
+from sdiego.gastos
+where mes = '${inputs.selector_mes_gastos.value}'
+group by tipo_gasto
+```
+
+## BanBajío
+
+<BigValue
+  data={saldo_bajio}
+  value=saldo
+  fmt='$#,##0.00'
 />
+
+## Saldos por casa
 
 <DataTable
-  data={ingresos}
+  data={saldos_por_casa}
   totalRow=true
 >
-  <Column id=periodo />
-  <Column id=pagos fmt=usd />
-  <Column id=importe_recaudado fmt=usd />
+  <Column id=casa />
+  <Column id=saldo fmt='$#,##0.00' />
 </DataTable>
 
-## Deudores
-
-```sql deudores
-select
-  casa,
-  strftime(periodo, '%Y-%m') as cuota,
-  saldo
-from sdiego.cuotas
-where saldo > 0
-order by casa, periodo
-```
-
-```sql resumen
-select
-  count(distinct casa) as casas,
-  sum(saldo) as saldo
-from ${deudores}
-where saldo > 0
-```
-
-```sql saldo_mensual
-select
-  strftime(periodo, '%Y-%m') as periodo,
-  sum(saldo) as saldo
-from sdiego.cuotas
-where saldo > 0 and last_day(periodo) <= last_day(current_date)
-group by periodo
-order by periodo
-```
-
-<BigValue
-  data={resumen}
-  value=saldo
-  fmt=usd
-/>
-
-<BigValue
-  data={resumen}
-  value=casas
-/>
+## Ingresos vs Gastos
 
 <BarChart
-  data={saldo_mensual}
-  x=periodo
-  y=saldo
+  data={ingresos_vs_gastos}
+  x=mes
+  y=importe
+  series=movimiento
+  type=grouped
   yFmt=usd
   sort=false
 />
 
 ## Gastos
 
-### Presupuesto vs Ejercido
-
-```sql presupuesto
-select
-  strftime(periodo, '%Y-%m') as periodo,
-  sum(importe) as importe,
-  sum(ejercido) as ejercido
-from sdiego.presupuesto
-group by periodo
-order by periodo
-```
-
-<BarChart
-  data={presupuesto}
-  x=periodo
-  y={['importe', 'ejercido']}
-  yFmt=usd
-  sort=false
-  type=grouped
+<Dropdown
+    data={selector_mes_gastos}
+    name=selector_mes_gastos
+    value=mes
+    title="Mes"
 />
 
-### Gastos por concepto
-
-```sql gastos_por_categoria
-select
-  strftime(periodo, '%Y-%m') as periodo,
-  categoria,
-  sum(ejercido) as total_ejercido,
-  sum(importe) as total_presupuesto
-from sdiego.presupuesto
-where last_day(periodo) <= last_day(current_date)
-group by periodo, categoria
-order by periodo, "total_ejercido" desc
-```
+Selected: {inputs.selector_mes_gastos.value}
 
 <DataTable
-  data={gastos_por_categoria}
-  groupBy=periodo
-  subtotals=true
+  data={gastos}
   totalRow=true
-  groupsOpen=false
 >
-  <Column id=periodo />
-  <Column id=categoria totalAgg=countDistinct />
-  <Column id=total_ejercido totalFmt=usd fmt=usd />
-  <Column id=total_presupuesto totalFmt=usd fmt=usd />
+  <Column id=tipo_gasto />
+  <Column id=importe fmt='$#,##0.00' />
 </DataTable>

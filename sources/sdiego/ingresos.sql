@@ -3,7 +3,6 @@ SELECT
     strftime(periodo, '%Y-%m-%d') as mes,
     recibo,
     importe,
-    tipo_gasto,
-    concepto,
+    tipo_ingreso,
     concepto_banco
-FROM silver.gastos
+FROM silver.ingresos
