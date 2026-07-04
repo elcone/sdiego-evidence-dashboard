@@ -1,5 +1,5 @@
 deployment:
-  basePath: /sdiego-evidence-dashboard
+  basePath: /resultados_privada
 
 appearance:
   default: system
