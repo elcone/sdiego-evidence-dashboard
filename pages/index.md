@@ -1,5 +1,5 @@
 ---
-title: Resultados de la Privada
+title: Gastos Mensuales
 ---
 
 ```sql saldo_bajio
@@ -9,13 +9,11 @@ from sdiego.saldo_bajio
 where periodo = (select max(periodo) from sdiego.saldo_bajio)
 ```
 
-```sql saldos_por_casa
+```sql gastos_del_mes
 select
-  casa::int::varchar as casa,
-  saldo
-from sdiego.saldos_por_casa
-where saldo <> 0
-order by casa
+  sum(importe) as importe
+from sdiego.gastos
+where mes = '${inputs.selector_mes_gastos.value}'
 ```
 
 ```sql ingresos_vs_gastos
@@ -45,9 +43,21 @@ from movimiento
 order by periodo
 ```
 
+```sql tendencia_gastos
+select
+  periodo,
+  mes,
+  tipo_gasto,
+  sum(importe) as importe
+from sdiego.gastos
+group by periodo, mes, tipo_gasto
+order by periodo
+```
+
 ```sql selector_mes_gastos
 select distinct mes
 from sdiego.gastos
+order by mes
 ```
 
 ```sql gastos
@@ -57,25 +67,17 @@ select
 from sdiego.gastos
 where mes = '${inputs.selector_mes_gastos.value}'
 group by tipo_gasto
+order by importe desc
 ```
 
-## BanBajío
+## Bancos
 
 <BigValue
   data={saldo_bajio}
   value=saldo
   fmt='$#,##0.00'
+  title='Saldo BanBajío'
 />
-
-## Saldos por casa
-
-<DataTable
-  data={saldos_por_casa}
-  totalRow=true
->
-  <Column id=casa />
-  <Column id=saldo fmt='$#,##0.00' />
-</DataTable>
 
 ## Ingresos vs Gastos
 
@@ -92,18 +94,35 @@ group by tipo_gasto
 ## Gastos
 
 <Dropdown
-    data={selector_mes_gastos}
-    name=selector_mes_gastos
-    value=mes
-    title="Mes"
+  data={selector_mes_gastos}
+  name=selector_mes_gastos
+  value=mes
+  title="Mes"
+  noDefault=true
 />
 
-Selected: {inputs.selector_mes_gastos.value}
+<br />
+
+<BigValue
+  data={gastos_del_mes}
+  value=importe
+  fmt='$#,##0.00'
+  title='Gastos del Mes'
+/>
 
 <DataTable
   data={gastos}
   totalRow=true
+  rows=all
 >
   <Column id=tipo_gasto />
   <Column id=importe fmt='$#,##0.00' />
 </DataTable>
+
+<LineChart
+  data={tendencia_gastos}
+  x=mes
+  y=importe
+  series=tipo_gasto
+  sort=false
+/>
